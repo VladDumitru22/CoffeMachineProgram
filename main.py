@@ -8,6 +8,12 @@ PENNIES = 0.01
 def turn_off_machine():
     return False
 
+def report(profit):
+    print(f"Water: {resources['water']}ml")
+    print(f"Milk: {resources['milk']}ml")
+    print(f"Coffee: {resources['coffee']}g")
+    print(f"Money: ${profit}")
+
 def check_resources(order_ingredients):
     for item in order_ingredients:
         if order_ingredients[item] >= resources[item]:
@@ -18,25 +24,22 @@ def check_resources(order_ingredients):
 def process_coins(quarters, dimes, nickles, pennies):
     return (quarters * QUARTERS) + (dimes * DIMES) + (nickles * NICKLES) + (pennies * PENNIES)
 
-def check_transaction(user_paid, drink_price, profit):
+def check_transaction(user_paid, drink_price):
     if drink_price > user_paid:
         print("Sorry that's not enough money. Money refunded.")
         return False
-    elif user_paid > drink_price:
-        profit += drink_price
-        change = user_paid - drink_price
-        print(f"Here is ${change} in change")
-        return True
-    else:
-        profit += drink_price
-        return True
+    change = round(user_paid - drink_price, 2)
+    if change > 0:
+        print(f"Here is ${change} in change.")
+    return True
+
+def make_coffee(order_ingredients):
+    for item in order_ingredients:
+        resources[item] -= order_ingredients[item]
 
 
-
+#Main Loop
 working_machine = True
-water = resources["water"]
-milk = resources["milk"]
-coffee = resources["coffee"]
 profit = 0
 
 while working_machine:
@@ -46,8 +49,8 @@ while working_machine:
     if user_input == "off":
         working_machine = turn_off_machine()
     elif user_input == "report":
-        print(f"Water: {water}ml\nMilk: {milk}ml\nCoffee: {coffee}g\nMoney: ${profit}")
-    else:
+        report(profit)
+    elif user_input in MENU:
         drink = MENU[user_input]
         if check_resources(drink["ingredients"]):
             print("Please insert coins.")
@@ -57,6 +60,9 @@ while working_machine:
             pennies_number = int(input("How many pennies?: "))
             user_paid = process_coins(quarters_number, dimes_number, nickles_number, pennies_number)
             print(user_paid)
-            if check_transaction(user_paid, drink["cost"], profit):
+            if check_transaction(user_paid, drink["cost"]):
+                make_coffee(drink["ingredients"])
+                profit += drink["cost"]
                 print(f"Here is your {user_input}, Enjoy!")
-
+    else:
+        print("Invalid option. Please choose a valid drink.")
